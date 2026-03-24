@@ -408,7 +408,7 @@ fn void Camera.rotate(&self, float angle_rad, Vec3 axis = { 0, 1, 0 })
 ///////////////////////////////////////////////////////////////////////////////
 
 
-bool[(uint)SdlScancode.max] key_down;
+bool[(uint)SdlScancode.COUNT] key_down;
 fn void SdlEvent.process_key(&self)
 {
 	if (self.type != KEY_DOWN && self.type != KEY_UP) return;
