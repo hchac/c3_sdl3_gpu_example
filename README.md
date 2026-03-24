@@ -1,13 +1,21 @@
 
 ## Description
 
-This is a sample project to test the SDL3 GPU bindings from C3's vendor libraries (https://github.com/c3lang/vendor). It's using the SDL3 callbacks approach instead of the usual `SDL init -> loop -> poll events` because I was curious if it worked in C3 (it does).
+This is a sample project to test the SDL3 GPU bindings from C3's vendor libraries (https://github.com/c3lang/vendor).
 
-Strictly following the video tutorial here:
-    * https://www.youtube.com/playlist?list=PLI3kBEQ3yd-CbQfRchF70BPLF9G1HEzhy
+`callback_example`:
+
+* Uses SDL3's new callback approach, where there is no `main` function and instead rely on SDL3 calling predefined functions
+* Strictly following the video tutorials here: https://www.youtube.com/playlist?list=PLI3kBEQ3yd-CbQfRchF70BPLF9G1HEzhy
+
+`loop_example`:
+
+* The more traditional main() for loop approach for SDL
+* Follows the tutorial at https://learnopengl.com but using SDL3 GPU instead
 
 ## Assets used
-* https://arexxuru.itch.io/pixel-floor-texture-pack-ground-tile
+* https://arexxuru.itch.io/pixel-floor-texture-pack-ground-tile (in `callback_example`)
+* https://learnopengl.com (in `loop_example`)
 
 ## Requirements
 
@@ -15,14 +23,13 @@ Strictly following the video tutorial here:
 * SDL3_image
 * glslc (to compile GLSL/HLSL shaders to SPIR-V)
 
-## Setup
+## Setup for both `callback_example` and `loop_example`
 1. Make sure you've installed the requirements listed above
 
 2. Download the following bindings:
     * https://github.com/c3lang/vendor/tree/main/libraries/sdl3.c3l
     * https://github.com/c3lang/vendor/tree/main/libraries/sdl3_image.c3l
 
-    Then drop them into the `lib` folder.
+    Then drop them into the `lib` folder inside `callback_example` and `loop_example`.
 
-## Run
-`./run.sh`
+3. `./run.sh` to compile & run inside `callback_example` or `loop_example`

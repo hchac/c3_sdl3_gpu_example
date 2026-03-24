@@ -1,4 +1,4 @@
-module c3_sdl3_gpu_example;
+module callback_example;
 
 import std::io;
 import std::math;
@@ -48,7 +48,7 @@ fn SdlAppResult init(void** state, CInt argc, char** argv) @export("SDL_AppInit"
 		return FAILURE;
 	}
 
-	window = sdl3::createWindow("gpu example", 1280, 720, { .resizable = true });
+	window = sdl3::createWindow("callback_example", 1280, 720, { .resizable = true });
 	if (!window)
 	{
 		sdl_error("failed to create window");
@@ -174,7 +174,7 @@ fn SdlAppResult init(void** state, CInt argc, char** argv) @export("SDL_AppInit"
 
 fn SdlAppResult event(void* state, SdlEvent* event) @export("SDL_AppEvent")
 {
-	if (event.is_quit() || event.is_key_down(sdl3::KEY_ESCAPE))
+	if (event.is_quit() || event.is_key_down(KEY_ESCAPE))
 	{
 		return SUCCESS;
 	}
