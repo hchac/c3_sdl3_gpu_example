@@ -10,9 +10,6 @@ layout (location = 0) out vec4 FragColor;
 
 void main()
 {
-	// FragColor = texture(tex_sampler0, uv) * our_color;
-	// FragColor = texture(tex_sampler0, uv);
-
 	FragColor = mix(
 		texture(tex_sampler0, uv),
 		texture(tex_sampler1, uv),

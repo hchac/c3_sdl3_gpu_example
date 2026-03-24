@@ -115,19 +115,9 @@ fn int main(String[] args)
 	});
 	defer sdl3::releaseGPUBuffer(gpu, vertex_buffer);
 
-	// ushort[*] indices = {
-	// };
-
-	// SdlGPUBuffer* index_buffer = sdl3::createGPUBuffer(gpu, &&{
-	// 	.usage = { .index = true },
-	// 	.size = $sizeof(indices),
-	// });
-	// defer sdl3::releaseGPUBuffer(gpu, index_buffer);
-
 	copy_to_gpu_buffer(
 		gpu,
 		{vertex_buffer, &vertices, $sizeof(vertices)},
-		// {index_buffer, &indices, $sizeof(indices)},
 	)!!;
 
 	SdlGPUShader* vert_shader = sdl3::createGPUShader(
@@ -319,16 +309,16 @@ fn int main(String[] args)
 			sdl3::bindGPUFragmentSamplers(render_pass, 0, &sampler_bindings, sampler_bindings.len);
 
 			float[3][*] cube_positions = {
-				{ 0.0,  0.0,  0.0  }, 
-				{ 2.0,  5.0, -15.0 }, 
-				{-1.5, -2.2, -2.5  },  
-				{-3.8, -2.0, -12.3 },  
-				{ 2.4, -0.4, -3.5  },  
-				{-1.7,  3.0, -7.5  },  
-				{ 1.3, -2.0, -2.5  },  
-				{ 1.5,  2.0, -2.5  }, 
-				{ 1.5,  0.2, -1.5  }, 
-				{-1.3,  1.0, -1.5  },
+				{  0.0,  0.0,  0.0  },
+				{  2.0,  5.0, -15.0 },
+				{ -1.5, -2.2, -2.5  },
+				{ -3.8, -2.0, -12.3 },
+				{  2.4, -0.4, -3.5  },
+				{ -1.7,  3.0, -7.5  },
+				{  1.3, -2.0, -2.5  },
+				{  1.5,  2.0, -2.5  },
+				{  1.5,  0.2, -1.5  },
+				{ -1.3,  1.0, -1.5  },
 			};
 			{
 				Mat4 model_matrix = MAT4I
