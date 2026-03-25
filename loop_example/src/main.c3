@@ -218,6 +218,10 @@ fn int main(String[] args)
 	float dt;
 	float camera_speed = 10.0;
 
+	const float FOV_MIN = 1.0;
+	const float FOV_MAX = 45.0;
+	float fov = FOV_MAX;
+
 	Camera camera = { {  0.0,  0.0,  3.0 }, 0, 0 };
 	KeyboardState keyboard;
 	MouseState mouse;
@@ -232,7 +236,7 @@ fn int main(String[] args)
 			return -1;
 		}
 
-		{
+		{ // Input
 			mouse.reset();
 
 			SdlEvent event;
@@ -242,37 +246,42 @@ fn int main(String[] args)
 				keyboard.process_event(&event);
 				mouse.process_event(&event);
 			}
-		}
 
-		if (keyboard.is_key_down(ESCAPE)) running = false;
-		if (keyboard.is_key_down(W))      camera.move((Vec3){ 0, 0, -camera_speed }*dt);
-		if (keyboard.is_key_down(S))      camera.move((Vec3){ 0, 0,  camera_speed }*dt);
-		if (keyboard.is_key_down(A))      camera.move((Vec3){ -camera_speed, 0, 0 }*dt);
-		if (keyboard.is_key_down(D))      camera.move((Vec3){  camera_speed, 0, 0 }*dt);
-		if (keyboard.is_key_down(LEFT))   camera.rotate_leftright(100*dt);
-		if (keyboard.is_key_down(RIGHT))  camera.rotate_leftright(-100*dt);
-		if (keyboard.is_key_down(UP))     camera.rotate_updown(100*dt);
-		if (keyboard.is_key_down(DOWN))   camera.rotate_updown(-100*dt);
-		if (keyboard.is_key_down(R))
-		{
-			camera.pos = { 0, 0, 3 };
-			camera.yaw = 0;
-			camera.pitch = 0;
-		}
-
-		if (mouse.right_pressed || mouse.right_down)
-		{
-			if (mouse.right_pressed)
+			if (keyboard.is_key_down(ESCAPE)) running = false;
+			if (keyboard.is_key_down(W))      camera.move((Vec3){ 0, 0, -camera_speed }*dt);
+			if (keyboard.is_key_down(S))      camera.move((Vec3){ 0, 0,  camera_speed }*dt);
+			if (keyboard.is_key_down(A))      camera.move((Vec3){ -camera_speed, 0, 0 }*dt);
+			if (keyboard.is_key_down(D))      camera.move((Vec3){  camera_speed, 0, 0 }*dt);
+			if (keyboard.is_key_down(LEFT))   camera.rotate_leftright(100*dt);
+			if (keyboard.is_key_down(RIGHT))  camera.rotate_leftright(-100*dt);
+			if (keyboard.is_key_down(UP))     camera.rotate_updown(100*dt);
+			if (keyboard.is_key_down(DOWN))   camera.rotate_updown(-100*dt);
+			if (keyboard.is_key_down(R))
 			{
-				mouse.lock_to_window(window, true);
+				camera.pos = { 0, 0, 3 };
+				camera.yaw = 0;
+				camera.pitch = 0;
 			}
 
-			camera.rotate_leftright(-mouse.delta_x*0.1f);
-			camera.rotate_updown(-mouse.delta_y*0.1f);
-		}
-		else if (mouse.right_released)
-		{
-			mouse.release_from_window(window);
+			if (mouse.right_pressed || mouse.right_down)
+			{
+				if (mouse.right_pressed)
+				{
+					mouse.lock_to_window(window, true);
+				}
+
+				camera.rotate_leftright(-mouse.delta_x*0.1f);
+				camera.rotate_updown(-mouse.delta_y*0.1f);
+			}
+			else if (mouse.right_released)
+			{
+				mouse.release_from_window(window);
+			}
+
+			if (mouse.delta_scroll)
+			{
+				fov = math::clamp(fov+mouse.delta_scroll*4, FOV_MIN, FOV_MAX);
+			}
 		}
 
 		SdlGPUCommandBuffer* command_buffer = sdl3::acquireGPUCommandBuffer(gpu);
@@ -351,7 +360,7 @@ fn int main(String[] args)
 					.rotate((float)(sdl3::getTicks() / 1000.0) * to_rad(55), { 0.5, 1.0, 0.0 })
 				;
 				Mat4 camera_view = camera.view();
-				Mat4 projection_matrix = matrix::perspective(to_rad(45), (float)window_width/window_height, 0.1, 100);
+				Mat4 projection_matrix = matrix::perspective(to_rad(fov), (float)window_width/window_height, 0.1, 100);
 
 				foreach (pos : cube_positions)
 				{
@@ -468,6 +477,8 @@ struct MouseState
 
 	float x, delta_x;
 	float y, delta_y;
+
+	float delta_scroll;
 }
 
 fn void MouseState.reset(&self)
@@ -479,6 +490,8 @@ fn void MouseState.reset(&self)
 
 	self.delta_x = 0;
 	self.delta_y = 0;
+
+	self.delta_scroll = 0;
 }
 
 fn void MouseState.process_event(&self, SdlEvent* ev)
@@ -506,6 +519,11 @@ fn void MouseState.process_event(&self, SdlEvent* ev)
 		self.y = mev.y;
 		self.delta_x = mev.xrel;
 		self.delta_y = mev.yrel;
+	}
+	else if (ev.type == MOUSE_WHEEL)
+	{
+		SdlMouseWheelEvent* mev = (SdlMouseWheelEvent*)ev;
+		self.delta_scroll = -mev.y;
 	}
 }
 
