@@ -15,11 +15,6 @@ char[*] frag_shader_code = $embed("../build/shape.spv.frag");
 char[*] container_image_source = $embed("../resources/container.png");
 char[*] awesomeface_source = $embed("../resources/awesomeface.png");
 
-SdlWindow* window;
-SdlGPUDevice* gpu;
-KeyboardState keyboard;
-MouseState mouse;
-
 fn int main(String[] args)
 {
 	sdl3::setLogPriorities(VERBOSE);
@@ -34,7 +29,7 @@ fn int main(String[] args)
 	}
 	defer sdl3::quit();
 
-	window = sdl3::createWindow("loop_example", 800, 600, { .resizable = true, .opengl = true });
+	SdlWindow* window = sdl3::createWindow("loop_example", 800, 600, { .resizable = true, .opengl = true });
 	if (!window)
 	{
 		sdl_error("failed to create window");
@@ -42,7 +37,7 @@ fn int main(String[] args)
 	}
 	defer sdl3::destroyWindow(window);
 
-	gpu = sdl3::createGPUDevice({ .spirv = true }, true, null);
+	SdlGPUDevice* gpu = sdl3::createGPUDevice({ .spirv = true }, true, null);
 	if (!gpu)
 	{
 		sdl_error("failed to create gpu device");
@@ -219,14 +214,13 @@ fn int main(String[] args)
 
 	defer if (depth_texture_info.texture) { sdl3::releaseGPUTexture(gpu, depth_texture_info.texture); }
 
-	Camera camera = {
-		{  0.0,  0.0,  3.0 },
-		0, 0,
-	};
-
 	float last_tick = ticks_s();
 	float dt;
 	float camera_speed = 10.0;
+
+	Camera camera = { {  0.0,  0.0,  3.0 }, 0, 0 };
+	KeyboardState keyboard;
+	MouseState mouse;
 
 	bool running = true;
 	while (running)
@@ -621,7 +615,7 @@ struct GPUTextureCopyDescription
 	int height;
 }
 
-fn void? copy_to_gpu_texture(SdlGPUDevice* device, GPUTextureCopyDescription ...descriptions)
+fn void? copy_to_gpu_texture(SdlGPUDevice* gpu, GPUTextureCopyDescription ...descriptions)
 {
 	uint total_size;
 	foreach (d : descriptions)
