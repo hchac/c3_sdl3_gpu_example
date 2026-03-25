@@ -17,6 +17,8 @@ char[*] awesomeface_source = $embed("../resources/awesomeface.png");
 
 SdlWindow* window;
 SdlGPUDevice* gpu;
+KeyboardState keyboard;
+MouseState mouse;
 
 fn int main(String[] args)
 {
@@ -219,7 +221,7 @@ fn int main(String[] args)
 
 	Camera camera = {
 		{  0.0,  0.0,  3.0 },
-		{  0.0,  0.0,  -1.0 },
+		0, 0,
 	};
 
 	float last_tick = ticks_s();
@@ -236,18 +238,48 @@ fn int main(String[] args)
 			return -1;
 		}
 
-		SdlEvent event;
-		while (sdl3::pollEvent(&event))
 		{
-			if (event.type == QUIT) running = false;
-			event.process_key();
+			mouse.reset();
+
+			SdlEvent event;
+			while (sdl3::pollEvent(&event))
+			{
+				if (event.type == QUIT) running = false;
+				keyboard.process_event(&event);
+				mouse.process_event(&event);
+			}
 		}
 
-		if (is_key_down(ESCAPE)) running = false;
-		if (is_key_down(W)) camera.move((Vec3){ 0, 0, -camera_speed }*dt);
-		if (is_key_down(S)) camera.move((Vec3){ 0, 0,  camera_speed }*dt);
-		if (is_key_down(A)) camera.move((Vec3){ -camera_speed, 0, 0 }*dt);
-		if (is_key_down(D)) camera.move((Vec3){  camera_speed, 0, 0 }*dt);
+		if (keyboard.is_key_down(ESCAPE)) running = false;
+		if (keyboard.is_key_down(W))      camera.move((Vec3){ 0, 0, -camera_speed }*dt);
+		if (keyboard.is_key_down(S))      camera.move((Vec3){ 0, 0,  camera_speed }*dt);
+		if (keyboard.is_key_down(A))      camera.move((Vec3){ -camera_speed, 0, 0 }*dt);
+		if (keyboard.is_key_down(D))      camera.move((Vec3){  camera_speed, 0, 0 }*dt);
+		if (keyboard.is_key_down(LEFT))   camera.rotate_leftright(100*dt);
+		if (keyboard.is_key_down(RIGHT))  camera.rotate_leftright(-100*dt);
+		if (keyboard.is_key_down(UP))     camera.rotate_updown(100*dt);
+		if (keyboard.is_key_down(DOWN))   camera.rotate_updown(-100*dt);
+		if (keyboard.is_key_down(R))
+		{
+			camera.pos = { 0, 0, 3 };
+			camera.yaw = 0;
+			camera.pitch = 0;
+		}
+
+		if (mouse.right_pressed || mouse.right_down)
+		{
+			if (mouse.right_pressed)
+			{
+				mouse.lock_to_window(window, true);
+			}
+
+			camera.rotate_leftright(-mouse.delta_x*0.1f);
+			camera.rotate_updown(-mouse.delta_y*0.1f);
+		}
+		else if (mouse.right_released)
+		{
+			mouse.release_from_window(window);
+		}
 
 		SdlGPUCommandBuffer* command_buffer = sdl3::acquireGPUCommandBuffer(gpu);
 		if (!command_buffer)
@@ -386,12 +418,22 @@ struct VertexTransform
 struct Camera
 {
 	Vec3 pos;
+	float yaw, pitch;
+}
+
+fn Vec3 Camera.facing(self)
+{
 	Vec3 facing;
+	facing.x = math::cos(to_rad(90+self.yaw)) * math::cos(to_rad(self.pitch));
+	facing.z = -math::sin(to_rad(90+self.yaw)) * math::cos(to_rad(self.pitch));
+	facing.y = math::sin(to_rad(self.pitch));
+
+	return facing;
 }
 
 fn Mat4 Camera.view(self, Vec3 up = { 0, 1, 0 })
 {
-	return matrix::look_at(self.pos, self.pos+self.facing, up);
+	return matrix::look_at(self.pos, self.pos+self.facing(), up);
 }
 
 fn void Camera.move(&self, Vec3 amount)
@@ -399,27 +441,94 @@ fn void Camera.move(&self, Vec3 amount)
 	self.pos += amount.transform(self.view());
 }
 
-fn void Camera.rotate(&self, float angle_rad, Vec3 axis = { 0, 1, 0 })
+fn void Camera.rotate_leftright(&self, float angle_degrees)
 {
-	self.facing = self.facing.transform(MAT4I.rotate(angle_rad, axis));
+	self.yaw = (360 + ((self.yaw+angle_degrees) % 360)) % 360;
 }
 
+fn void Camera.rotate_updown(&self, float angle_degrees)
+{
+	self.pitch = math::clamp(self.pitch+angle_degrees, -89.99f, 89.99f);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
 
-bool[(uint)SdlScancode.COUNT] key_down;
-fn void SdlEvent.process_key(&self)
+struct KeyboardState
 {
-	if (self.type != KEY_DOWN && self.type != KEY_UP) return;
-	SdlKeyboardEvent* kev = (SdlKeyboardEvent*)self;
-	key_down[(uint)kev.scancode] = self.type == KEY_DOWN;
+	bool[(uint)SdlScancode.COUNT] key_down;
+}
+fn void KeyboardState.process_event(&self, SdlEvent* ev)
+{
+	if (ev.type != KEY_DOWN && ev.type != KEY_UP) return;
+	SdlKeyboardEvent* kev = (SdlKeyboardEvent*)ev;
+	self.key_down[(uint)kev.scancode] = ev.type == KEY_DOWN;
 }
 
-fn bool is_key_down(SdlScancode k) => (uint)k < key_down.len && key_down[(uint)k];
+fn bool KeyboardState.is_key_down(&self, SdlScancode k) => (uint)k < self.key_down.len && self.key_down[(uint)k];
 
-fn float to_rad(float degrees) => math::deg_to_rad(degrees);
+struct MouseState
+{
+	bool left_down, left_pressed, left_released;
+	bool right_down, right_pressed, right_released;
 
+	float x, delta_x;
+	float y, delta_y;
+}
+
+fn void MouseState.reset(&self)
+{
+	self.left_pressed = false;
+	self.left_released = false;
+	self.right_pressed = false;
+	self.right_released = false;
+
+	self.delta_x = 0;
+	self.delta_y = 0;
+}
+
+fn void MouseState.process_event(&self, SdlEvent* ev)
+{
+	if (ev.type == MOUSE_BUTTON_DOWN || ev.type == MOUSE_BUTTON_UP)
+	{
+		SdlMouseButtonEvent* mev = (SdlMouseButtonEvent*)ev;
+		if (mev.button == (char)SdlMouseButtonFlags.LEFT)
+		{
+			self.left_pressed  = ev.type == MOUSE_BUTTON_DOWN;
+			self.left_released = !self.left_pressed;
+			self.left_down     = ev.type == MOUSE_BUTTON_DOWN;
+		}
+		else if (mev.button == (char)SdlMouseButtonFlags.RIGHT)
+		{
+			self.right_pressed  = ev.type == MOUSE_BUTTON_DOWN;
+			self.right_released = !self.right_pressed;
+			self.right_down     = ev.type == MOUSE_BUTTON_DOWN;
+		}
+	}
+	else if (ev.type == MOUSE_MOTION)
+	{
+		SdlMouseMotionEvent* mev = (SdlMouseMotionEvent*)ev;
+		self.x = mev.x;
+		self.y = mev.y;
+		self.delta_x = mev.xrel;
+		self.delta_y = mev.yrel;
+	}
+}
+
+fn void MouseState.lock_to_window(&self, SdlWindow* window, bool confine = false)
+{
+	sdl3::setWindowRelativeMouseMode(window, true);
+	if (confine && !sdl3::setWindowMouseRect(window, &&{ (int)self.x, (int)self.y, 1, 1 }))
+	{
+		sdl_error("failed to confine mouse");
+	}
+}
+
+fn void MouseState.release_from_window(&self, SdlWindow* window)
+{
+	sdl3::setWindowRelativeMouseMode(window, false);
+	sdl3::setWindowMouseRect(window, null);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -700,3 +809,5 @@ macro sdl_error(String msg)
 }
 
 macro float ticks_s() => (float)sdl3::getTicks() / 1000.0;
+fn float to_rad(float degrees) => math::deg_to_rad(degrees);
+
