@@ -712,7 +712,7 @@ fn SdlSurface*? load_image_from_memory(char[] data)
 		return IO_FROM_MEM_FAILED~;
 	}
 
-	SdlSurface* surface = sdl3_image::loadIO(io_stream, true);
+	SdlSurface* surface = sdl3_image::load_IO(io_stream, true);
 	if (!surface)
 	{
 		sdl_error("failed to load image from io stream");
