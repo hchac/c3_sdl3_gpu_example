@@ -29,7 +29,7 @@ fn int main(String[] args)
 	}
 	defer sdl3::quit();
 
-	SdlWindow* window = sdl3::createWindow("loop_example", 800, 600, { .resizable = true, .opengl = true });
+	SdlWindow* window = sdl3::createWindow("loop_example", 800, 600, { .resizable = true });
 	if (!window)
 	{
 		sdl_error("failed to create window");
