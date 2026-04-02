@@ -27,9 +27,9 @@ This is a sample project to test the SDL3 GPU bindings from C3's vendor librarie
 1. Make sure you've installed the requirements listed above
 
 2. Download the following bindings:
-    * https://github.com/c3lang/vendor/tree/main/libraries/sdl3.c3l
-    * https://github.com/c3lang/vendor/tree/main/libraries/sdl3_image.c3l
+    * https://github.com/c3lang/vendor/releases/download/latest/sdl3.c3l
+    * https://github.com/c3lang/vendor/releases/download/latest/sdl3_image.c3l
 
-    Then drop them into the `lib` folder inside `callback_example` and `loop_example`.
+    Unpack the downloads, then drop the unpacked folders into the `lib` folder inside `callback_example` and `loop_example`. Make sure the folder copied into `lib` ends in `.c3l`, so: `lib/sdl3.c3l` and `lib/sdl3_image.c3l`.
 
 3. `./run.sh` to compile & run inside `callback_example` or `loop_example`
