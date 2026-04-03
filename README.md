@@ -19,8 +19,6 @@ This is a sample project to test the SDL3 GPU bindings from C3's vendor librarie
 
 ## Requirements
 
-* SDL3
-* SDL3_image
 * glslc (to compile GLSL/HLSL shaders to SPIR-V)
 
 ## Setup for both `callback_example` and `loop_example`
