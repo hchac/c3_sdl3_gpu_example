@@ -108,13 +108,13 @@ fn int main(String[] args)
 
 	SdlGPUBuffer* vertex_buffer = sdl3::createGPUBuffer(gpu, &&{
 		.usage = { .vertex = true },
-		.size = $sizeof(vertices),
+		.size = $reflect(vertices).size,
 	});
 	defer sdl3::releaseGPUBuffer(gpu, vertex_buffer);
 
 	copy_to_gpu_buffer(
 		gpu,
-		{vertex_buffer, &vertices, $sizeof(vertices)},
+		{vertex_buffer, &vertices, $reflect(vertices).size},
 	)!!;
 
 	SdlGPUShader* vert_shader = sdl3::createGPUShader(
@@ -148,7 +148,7 @@ fn int main(String[] args)
 	SdlGPUVertexBufferDescription[*] vertex_descriptions = {
 		{
 			.slot = 0,
-			.pitch = VertexData.sizeof,
+			.pitch = VertexData::size,
 		},
 	};
 
@@ -156,17 +156,17 @@ fn int main(String[] args)
 		{
 			.location = 0,
 			.format = FLOAT3,
-			.offset = VertexData.position.offsetof,
+			.offset = $reflect(VertexData.position).offset,
 		},
 		{
 			.location = 1,
 			.format = FLOAT3,
-			.offset = VertexData.color.offsetof,
+			.offset = $reflect(VertexData.color).offset,
 		},
 		{
 			.location = 2,
 			.format = FLOAT2,
-			.offset = VertexData.uv.offsetof,
+			.offset = $reflect(VertexData.uv).offset,
 		},
 	};
 
@@ -372,7 +372,7 @@ fn int main(String[] args)
 						projection_matrix*view_matrix*model_matrix,
 					};
 					sdl3::pushGPUVertexUniformData(
-						command_buffer, 0, &vertex_transform, $sizeof(vertex_transform),
+						command_buffer, 0, &vertex_transform, $reflect(vertex_transform).size,
 					);
 
 					sdl3::drawGPUPrimitives(render_pass, vertices.len, 1, 0, 0);

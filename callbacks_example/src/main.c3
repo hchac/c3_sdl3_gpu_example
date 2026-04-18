@@ -82,7 +82,7 @@ fn SdlAppResult init(void** state, CInt argc, char** argv) @export("SDL_AppInit"
 
 	vertex_buffer = sdl3::createGPUBuffer(gpu, &&{
 		.usage = { .vertex = true },
-		.size = $sizeof(vertices),
+		.size = $reflect(vertices).size,
 	});
 
 	ushort[*] indices = {
@@ -92,13 +92,13 @@ fn SdlAppResult init(void** state, CInt argc, char** argv) @export("SDL_AppInit"
 
 	index_buffer = sdl3::createGPUBuffer(gpu, &&{
 		.usage = { .index = true },
-		.size = $sizeof(indices),
+		.size = $reflect(indices).size,
 	});
 
 	copy_to_gpu_buffer(
 		gpu,
-		{vertex_buffer, &vertices, $sizeof(vertices)},
-		{index_buffer, &indices, $sizeof(indices)},
+		{vertex_buffer, &vertices, $reflect(vertices).size},
+		{index_buffer, &indices, $reflect(indices).size},
 	)!!;
 
 	texture = sdl3::createGPUTexture(gpu, &&{
@@ -119,7 +119,7 @@ fn SdlAppResult init(void** state, CInt argc, char** argv) @export("SDL_AppInit"
 	SdlGPUVertexBufferDescription[*] vertex_buff_descs = {
 		{
 			.slot = 0,
-			.pitch = VertexData.sizeof,
+			.pitch = VertexData::size,
 		},
 	};
 
@@ -127,17 +127,17 @@ fn SdlAppResult init(void** state, CInt argc, char** argv) @export("SDL_AppInit"
 		{
 			.location = 0,
 			.format = FLOAT3,
-			.offset = VertexData.pos.offsetof,
+			.offset = $reflect(VertexData.pos).offset,
 		},
 		{
 			.location = 1,
 			.format = FLOAT4,
-			.offset = VertexData.color.offsetof,
+			.offset = $reflect(VertexData.color).offset,
 		},
 		{
 			.location = 2,
 			.format = FLOAT2,
-			.offset = VertexData.uv.offsetof,
+			.offset = $reflect(VertexData.uv).offset,
 		},
 	};
 
@@ -239,7 +239,7 @@ fn SdlAppResult iter(void* state) @export("SDL_AppIterate")
 			};
 			sdl3::bindGPUVertexBuffers(render_pass, 0, &vertex_buffers_bindings, vertex_buffers_bindings.len);
 			sdl3::bindGPUIndexBuffer(render_pass, &&{ .buffer = index_buffer }, BIT16);
-			sdl3::pushGPUVertexUniformData(command_buffer, 0, &ubo, $sizeof(ubo));
+			sdl3::pushGPUVertexUniformData(command_buffer, 0, &ubo, $reflect(ubo).size);
 
 			SdlGPUTextureSamplerBinding[*] texture_bindings = {
 				{
